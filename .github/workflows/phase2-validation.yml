@@ -38,8 +38,8 @@ jobs:
           cache: gradle
           cache-dependency-path: phase2-source/CallControl/**/*.gradle*
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
+        run: sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Run JVM unit tests
         working-directory: phase2-source/CallControl
