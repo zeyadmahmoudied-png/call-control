@@ -96,7 +96,7 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          working-directory: phase2-source/CallControl
           script: |
+            cd phase2-source/CallControl
             chmod +x ./gradlew
             ./gradlew --no-daemon :storage-android:connectedDebugAndroidTest
