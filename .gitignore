@@ -1,0 +1,7 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+# Room schema JSON files in storage-android/schemas/ MUST be committed (needed for migration tests).

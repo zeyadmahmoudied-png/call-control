@@ -1,0 +1,19 @@
+Call Control - Phase 1 (domain module)
+
+How the tests were run:
+  Kotlin 2.0.21 compiler + JUnit 4.13.2 (both bundled with Gradle 8.14.3), run with JUnitCore.
+  Gradle itself was NOT run (no network in the build environment): the .gradle.kts files are untested.
+  Please run:  ./gradlew :domain:test
+
+Result:
+  JUnit version 4.13.2
+  OK (59 tests)
+
+  PhoneNormalizerTest    18
+  ScheduleResolverTest   12
+  RuleEngineTest         29
+
+Not covered yet (needs Room / the real service, Phases 2-3):
+  service disabled, phone reboot, real database failure, Android emulator, real e& Egypt SIM.
+
+Correction (Phase 2): an earlier message listed 19/13/27 per class. The real counts are 18/12/29; the total (59) was always right.

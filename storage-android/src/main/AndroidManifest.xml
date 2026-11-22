@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Storage library: no permissions, no components. Everything stays on the device. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" />
