@@ -1,0 +1,94 @@
+name: Import Call Control source archive
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'CallControl-phase3-7-source.zip'
+      - 'CallControl-phase3-7-source.zip.sha256'
+      - '.github/workflows/import-source-zip.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: import-call-control-source
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate and extract source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f CallControl-phase3-7-source.zip
+          if test -f CallControl-phase3-7-source.zip.sha256; then
+            sha256sum -c CallControl-phase3-7-source.zip.sha256
+          fi
+          rm -rf "$RUNNER_TEMP/callcontrol-source"
+          mkdir -p "$RUNNER_TEMP/callcontrol-source"
+          unzip -q CallControl-phase3-7-source.zip -d "$RUNNER_TEMP/callcontrol-source"
+          test -d "$RUNNER_TEMP/callcontrol-source/CallControl"
+          test -f "$RUNNER_TEMP/callcontrol-source/CallControl/settings.gradle.kts" -o -f "$RUNNER_TEMP/callcontrol-source/CallControl/settings.gradle"
+          echo "SOURCE_DIR=$RUNNER_TEMP/callcontrol-source/CallControl" >> "$GITHUB_ENV"
+          echo "Extracted source tree:"
+          find "$RUNNER_TEMP/callcontrol-source/CallControl" -maxdepth 3 -type f | sort | head -200
+
+      - name: Preserve old archives and workflow, then install source files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p archive/phase2 archive/source-zips archive/old-workflows
+          if test -f CallControl-phase2.zip; then mv CallControl-phase2.zip archive/phase2/; fi
+          if test -f CallControl-phase2.zip.sha256; then mv CallControl-phase2.zip.sha256 archive/phase2/; fi
+          if test -f CallControl-phase3-7-source.zip; then mv CallControl-phase3-7-source.zip archive/source-zips/; fi
+          if test -f CallControl-phase3-7-source.zip.sha256; then mv CallControl-phase3-7-source.zip.sha256 archive/source-zips/; fi
+          if test -f .github/workflows/phase2-validation.yml; then mv .github/workflows/phase2-validation.yml archive/old-workflows/; fi
+          cp -a "$SOURCE_DIR/." .
+          test -f gradlew
+          test -f .github/workflows/ci.yml
+          test -f .github/workflows/release.yml
+          echo "Installed source files:"
+          git status --short
+
+      - name: Commit extracted project
+        id: commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "Import Call Control phases 3-7 source"
+          git push origin HEAD:main
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger CI validation
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in {1..8}; do
+            if gh workflow run ci.yml --ref main; then
+              echo "CI workflow dispatched."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::warning::Could not dispatch ci.yml automatically. Open Actions and run CI manually."
