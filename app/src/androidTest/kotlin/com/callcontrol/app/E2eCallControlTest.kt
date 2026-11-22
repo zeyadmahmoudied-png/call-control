@@ -8,6 +8,7 @@ import com.callcontrol.storage.RepoResult
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,8 +31,8 @@ class E2eCallControlTest {
         TestSupport.reset()
         runBlocking {
             val r = TestSupport.repo()
-            r.check(r.addNumberRule("01012345678", Mode.BUSY, "e2e-busy", null) is RepoResult.Success)
-            r.check(r.addNumberRule("01112345678", Mode.SILENT, "e2e-silent", null) is RepoResult.Success)
+            assertTrue(r.addNumberRule("01012345678", Mode.BUSY, "e2e-busy", null) is RepoResult.Success)
+            assertTrue(r.addNumberRule("01112345678", Mode.SILENT, "e2e-silent", null) is RepoResult.Success)
         }
     }
 
