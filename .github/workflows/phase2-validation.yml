@@ -30,6 +30,14 @@ jobs:
           unzip -q CallControl-phase2.zip -d phase2-source
           test -f phase2-source/CallControl/gradlew
 
+      - name: Enable AndroidX in extracted project
+        working-directory: phase2-source/CallControl
+        run: |
+          touch gradle.properties
+          if ! grep -q '^android.useAndroidX=true$' gradle.properties; then
+            printf '\nandroid.useAndroidX=true\n' >> gradle.properties
+          fi
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -95,6 +103,14 @@ jobs:
           mkdir phase2-source
           unzip -q CallControl-phase2.zip -d phase2-source
           test -f phase2-source/CallControl/gradlew
+
+      - name: Enable AndroidX in extracted project
+        working-directory: phase2-source/CallControl
+        run: |
+          touch gradle.properties
+          if ! grep -q '^android.useAndroidX=true$' gradle.properties; then
+            printf '\nandroid.useAndroidX=true\n' >> gradle.properties
+          fi
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
