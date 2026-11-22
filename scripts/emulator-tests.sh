@@ -10,8 +10,8 @@ echo "== 1/2 instrumentation tests (Room, DataStore, Compose UI) =="
 echo "== 2/2 real incoming calls through the emulated modem =="
 ./gradlew --no-daemon :app:installDebug :app:installDebugAndroidTest
 adb shell cmd role add-role-holder --user 0 android.app.role.CALL_SCREENING "$PKG"
-adb shell cmd role get-role-holders --user 0 android.app.role.CALL_SCREENING | tee /tmp/holders.txt
-grep -q "$PKG" /tmp/holders.txt
+adb shell dumpsys role | tee /tmp/roles.txt
+grep -F "android.app.role.CALL_SCREENING" /tmp/roles.txt | grep -Fq "$PKG"
 adb shell am instrument -w -e e2e seed -e class com.callcontrol.app.E2eCallControlTest \
   "$PKG.test/androidx.test.runner.AndroidJUnitRunner" | tee /tmp/seed.txt
 grep -q "OK (" /tmp/seed.txt
