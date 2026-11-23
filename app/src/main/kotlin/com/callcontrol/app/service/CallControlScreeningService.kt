@@ -15,12 +15,6 @@ import kotlinx.coroutines.launch
  * Official Android call screening (Android 10+). Android binds this service only while the user has made
  * the app the "Caller ID & spam app" (ROLE_CALL_SCREENING).
  *
- * What it can do, and nothing more, through [CallResponse]:
- *  - allow  : normal ringing
- *  - reject : the DEVICE rejects the call (disallowCall + rejectCall). What the caller then hears (busy tone,
- *             voicemail, "not reachable"...) is decided by the carrier, not by this app.
- *  - silence: the call arrives but the ringer is muted (silenceCall)
- *
  * SAFETY: any failure (database, contacts, timeout, unexpected exception) ends in ALLOW.
  */
 class CallControlScreeningService : CallScreeningService() {
@@ -28,14 +22,14 @@ class CallControlScreeningService : CallScreeningService() {
     override fun onScreenCall(callDetails: Call.Details) {
         val app = application as CallControlApp
 
-        // Screening may also be asked about outgoing calls; those are never touched.
         if (callDetails.callDirection != Call.Details.DIRECTION_INCOMING) {
             respondToCall(callDetails, CallResponse.Builder().build())
             return
         }
 
+        val rawNumber = callDetails.handle?.schemeSpecificPart
         val incoming = IncomingCall(
-            rawNumber = callDetails.handle?.schemeSpecificPart,
+            rawNumber = rawNumber,
             presentationRestricted = callDetails.handlePresentation == TelecomManager.PRESENTATION_RESTRICTED,
         )
         val processor = app.screeningProcessor
@@ -53,9 +47,12 @@ class CallControlScreeningService : CallScreeningService() {
                 respondToCall(callDetails, buildResponse(result.decision.action))
                 null
             } catch (e: Exception) {
-                e::class.java.simpleName // e.g. the call ended before we answered; recorded in the log
+                e::class.java.simpleName
             }
 
+            if (deliveryError == null && result.decision.action == CallAction.REJECT) {
+                CallRejectedNotifier(this@CallControlScreeningService).show(rawNumber)
+            }
             processor.record(result, deliveryError)
         }
     }
