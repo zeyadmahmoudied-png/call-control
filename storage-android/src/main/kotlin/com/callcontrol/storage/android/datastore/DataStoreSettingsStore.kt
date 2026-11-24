@@ -18,7 +18,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
 /**
@@ -36,11 +38,18 @@ import kotlinx.coroutines.flow.map
  */
 class DataStoreSettingsStore(private val dataStore: DataStore<Preferences>) : SettingsStore {
 
-    override fun observe(): Flow<AppSettings> = dataStore.data.map { it.toSettings() }
+    override fun observe(): Flow<AppSettings> = flow {
+        migrateOldAvailableDefault()
+        emitAll(dataStore.data.map { it.toSettings() })
+    }
 
-    override suspend fun read(): AppSettings = dataStore.data.first().toSettings()
+    override suspend fun read(): AppSettings {
+        migrateOldAvailableDefault()
+        return dataStore.data.first().toSettings()
+    }
 
     override suspend fun update(transform: (AppSettings) -> AppSettings): AppSettings {
+        migrateOldAvailableDefault()
         var stored = AppSettings()
         dataStore.edit { prefs ->
             val updated = transform(prefs.toSettings())
@@ -53,6 +62,7 @@ class DataStoreSettingsStore(private val dataStore: DataStore<Preferences>) : Se
     object Keys {
         val CONTROL_ENABLED = booleanPreferencesKey("control_enabled")
         val GLOBAL_MODE = stringPreferencesKey("global_mode")
+        val GLOBAL_REJECT_DEFAULT_MIGRATED = booleanPreferencesKey("global_reject_default_migrated")
         val UNREGISTERED_ENABLED = booleanPreferencesKey("unregistered_enabled")
         val UNREGISTERED_MODE = stringPreferencesKey("unregistered_mode")
         val HIDDEN_ENABLED = booleanPreferencesKey("hidden_enabled")
@@ -62,6 +72,22 @@ class DataStoreSettingsStore(private val dataStore: DataStore<Preferences>) : Se
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
         val LOG_ENABLED = booleanPreferencesKey("log_enabled")
+    }
+
+    /**
+     * This release changes the product's default from allowing everyone to rejecting everyone
+     * except explicit per-number exceptions. Apply that new default once to installations that
+     * still have the old AVAILABLE default; preserve any other user-selected mode.
+     */
+    private suspend fun migrateOldAvailableDefault() {
+        dataStore.edit { prefs ->
+            if (prefs[Keys.GLOBAL_REJECT_DEFAULT_MIGRATED] != true) {
+                if (prefs[Keys.GLOBAL_MODE] == null || prefs[Keys.GLOBAL_MODE] == Mode.AVAILABLE.name) {
+                    prefs[Keys.GLOBAL_MODE] = Mode.BUSY.name
+                }
+                prefs[Keys.GLOBAL_REJECT_DEFAULT_MIGRATED] = true
+            }
+        }
     }
 
     private fun Preferences.toSettings(): AppSettings {
