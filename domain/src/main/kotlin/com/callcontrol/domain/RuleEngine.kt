@@ -87,9 +87,9 @@ data class Decision(
  * Pure, stateless decision logic. No Android, no database, no clock of its own.
  *
  * Priority (first match wins):
- *  1. Per-number rule (enabled)
- *  2. Unregistered-number rule (enabled; only for calls WITH a number that is NOT in contacts)
- *  3. Hidden-number rule (enabled; only for calls without a number)
+ *  1. Per-number rule (enabled; this is the only exception to a rejecting global mode)
+ *  2. A rejecting global mode, which blocks all other callers regardless of contact status or schedule
+ *  3. Unregistered-number rule and hidden-number rule (when the global mode is not rejecting)
  *  4. Global mode (possibly replaced by the schedule)
  *
  * Unregistered and hidden are never mixed: a hidden call is not "unregistered", and a call whose
@@ -112,6 +112,12 @@ object RuleEngine {
             if (rule != null && rule.enabled) {
                 return Decision(rule.mode, DecisionReason.NUMBER_RULE, matchedNumber = key)
             }
+        }
+
+        // A rejecting global mode is the master block: only an explicit per-number rule above
+        // may create an exception. Broad categories and schedules cannot accidentally let calls through.
+        if (config.globalMode.action == CallAction.REJECT) {
+            return Decision(config.globalMode, DecisionReason.GLOBAL_MODE)
         }
 
         // 2. unregistered numbers (a number is present, lookup succeeded, and it is not a contact)
