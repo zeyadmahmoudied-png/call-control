@@ -40,7 +40,7 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
  */
 data class AppSettings(
     val controlEnabled: Boolean = true,
-    val globalMode: Mode = Mode.AVAILABLE,
+    val globalMode: Mode = Mode.BUSY,
     val unregistered: LevelRule = LevelRule(enabled = false, mode = Mode.AVAILABLE),
     val hidden: LevelRule = LevelRule(enabled = false, mode = Mode.AVAILABLE),
     val scheduleEnabled: Boolean = false,
