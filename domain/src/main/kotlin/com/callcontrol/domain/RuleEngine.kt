@@ -52,10 +52,10 @@ data class RuleConfig(
     val numberRules: Map<String, SpecialRule> = emptyMap(),
 ) {
     companion object {
-        /** Fresh install: control on, everything available, no special levels active. */
+        /** Fresh install: control on, reject calls by default; per-number exceptions may allow selected callers. */
         val DEFAULT = RuleConfig(
             controlEnabled = true,
-            globalMode = Mode.AVAILABLE,
+            globalMode = Mode.BUSY,
             unregistered = LevelRule(enabled = false, mode = Mode.AVAILABLE),
             hidden = LevelRule(enabled = false, mode = Mode.AVAILABLE),
         )
