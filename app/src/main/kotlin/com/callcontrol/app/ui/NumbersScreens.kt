@@ -97,7 +97,7 @@ fun NumbersScreen(vm: MainViewModel) {
     val shown = all.filter { matchesQuery(it, query) }
 
     ScreenScaffold(
-        title = "الأرقام الخاصة",
+        title = "الاستثناءات",
         onBack = { vm.back() },
         floatingActionButton = {
             FloatingActionButton(onClick = { vm.navigate(Screen.EditNumber(null)) }, modifier = Modifier.testTag("fab_add")) {
@@ -117,7 +117,7 @@ fun NumbersScreen(vm: MainViewModel) {
             Spacer(Modifier.height(8.dp))
             if (all.isEmpty()) {
                 Text(
-                    "لا توجد قواعد بعد. اضغط + لإضافة رقم.",
+                    "لا توجد استثناءات بعد. اضغط + لإضافة رقم مسموح.",
                     modifier = Modifier.padding(16.dp).testTag("empty_rules"),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -175,7 +175,7 @@ fun EditNumberScreen(vm: MainViewModel, id: Long?) {
     var number by rememberSaveable(id) { mutableStateOf("") }
     var name by rememberSaveable(id) { mutableStateOf("") }
     var notes by rememberSaveable(id) { mutableStateOf("") }
-    var mode by rememberSaveable(id) { mutableStateOf(Mode.BUSY) }
+    var mode by rememberSaveable(id) { mutableStateOf(Mode.AVAILABLE) }
     var enabled by rememberSaveable(id) { mutableStateOf(true) }
     var error by rememberSaveable(id) { mutableStateOf<String?>(null) }
     var saving by remember { mutableStateOf(false) }
@@ -210,7 +210,7 @@ fun EditNumberScreen(vm: MainViewModel, id: Long?) {
     }
 
     ScreenScaffold(
-        title = if (id == null) "إضافة رقم" else "تعديل القاعدة",
+        title = if (id == null) "إضافة استثناء" else "تعديل الاستثناء",
         onBack = { vm.back() },
         actions = {
             if (id != null) {
