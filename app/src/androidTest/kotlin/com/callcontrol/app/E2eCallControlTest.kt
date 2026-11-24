@@ -31,6 +31,7 @@ class E2eCallControlTest {
         TestSupport.reset()
         runBlocking {
             val r = TestSupport.repo()
+            r.updateSettings { it.copy(globalMode = Mode.AVAILABLE) }.getOrThrow()
             assertTrue(r.addNumberRule("01012345678", Mode.BUSY, "e2e-busy", null) is RepoResult.Success)
             assertTrue(r.addNumberRule("01112345678", Mode.SILENT, "e2e-silent", null) is RepoResult.Success)
         }
