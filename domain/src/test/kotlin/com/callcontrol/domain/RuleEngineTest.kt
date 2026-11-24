@@ -100,6 +100,14 @@ class RuleEngineTest {
     }
 
     @Test
+    fun silentPerNumberRuleCannotBypassRejectingGlobalMode() {
+        val cfg = config(global = Mode.BUSY, rules = listOf(SpecialRule(friend, Mode.SILENT)))
+        val d = decide(call(), cfg)
+        assertEquals(CallAction.REJECT, d.action)
+        assertEquals(DecisionReason.GLOBAL_MODE, d.reason)
+    }
+
+    @Test
     fun numberRuleSilentSilencesWithoutRejecting() {
         val d = decide(call(), config(rules = listOf(SpecialRule(friend, Mode.SILENT))))
         assertEquals(CallAction.SILENCE, d.action)
