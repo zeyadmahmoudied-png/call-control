@@ -153,7 +153,7 @@ class ScreeningProcessorTest {
     @Test
     fun slowContactsLookupTimesOutAsUnknown() = runBlocking<Unit> {
         val f = Fixture()
-        f.repository().updateSettings { it.copy(unregistered = LevelRule(true, Mode.BUSY)) }.getOrThrow()
+        f.repository().updateSettings { it.copy(globalMode = Mode.AVAILABLE, unregistered = LevelRule(true, Mode.BUSY)) }.getOrThrow()
         val slow = ContactLookup { delay(5_000); ContactStatus.NOT_IN_CONTACTS }
         val started = System.currentTimeMillis()
 
