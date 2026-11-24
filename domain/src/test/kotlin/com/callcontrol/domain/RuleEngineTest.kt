@@ -74,6 +74,25 @@ class RuleEngineTest {
     }
 
     @Test
+    fun rejectingGlobalModeBlocksUnregisteredHiddenAndScheduledAllowModes() {
+        val cfg = config(
+            global = Mode.BUSY,
+            unregistered = LevelRule(true, Mode.AVAILABLE),
+            hidden = LevelRule(true, Mode.AVAILABLE),
+            schedule = Schedule(
+                enabled = true,
+                entries = listOf(ScheduleEntry(DayOfWeek.values().toSet(), LocalTime.of(8, 0), LocalTime.of(14, 0), Mode.AVAILABLE)),
+                defaultMode = Mode.AVAILABLE,
+            ),
+        )
+        assertEquals(CallAction.REJECT, decide(call(stranger, ContactStatus.NOT_IN_CONTACTS), cfg).action)
+        assertEquals(CallAction.REJECT, decide(call(number = null, contact = ContactStatus.UNKNOWN, hidden = true), cfg).action)
+        assertEquals(CallAction.ALLOW, decide(call(friend), cfg.copy(
+            numberRules = mapOf(friend to SpecialRule(friend, Mode.AVAILABLE)),
+        )).action)
+    }
+
+    @Test
     fun numberRuleBusyBeatsAvailableGlobal() {
         val d = decide(call(), config(global = Mode.AVAILABLE, rules = listOf(SpecialRule(friend, Mode.BUSY))))
         assertEquals(CallAction.REJECT, d.action)
