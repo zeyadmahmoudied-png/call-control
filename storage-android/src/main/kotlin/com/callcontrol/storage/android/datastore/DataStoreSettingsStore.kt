@@ -75,14 +75,14 @@ class DataStoreSettingsStore(private val dataStore: DataStore<Preferences>) : Se
     }
 
     /**
-     * This release changes the product's default from allowing everyone to rejecting everyone
-     * except explicit per-number exceptions. Apply that new default once to installations that
-     * still have the old AVAILABLE default; preserve any other user-selected mode.
+     * This release changes the product's default from allowing/silencing everyone to rejecting everyone
+     * except explicit per-number exceptions. Apply that new default once to installations whose old
+     * global mode did not reject; preserve an already-rejecting user-selected mode.
      */
     private suspend fun migrateOldAvailableDefault() {
         dataStore.edit { prefs ->
             if (prefs[Keys.GLOBAL_REJECT_DEFAULT_MIGRATED] != true) {
-                if (prefs[Keys.GLOBAL_MODE] == null || prefs[Keys.GLOBAL_MODE] == Mode.AVAILABLE.name) {
+                if (prefs[Keys.GLOBAL_MODE] == null || prefs[Keys.GLOBAL_MODE] == Mode.AVAILABLE.name || prefs[Keys.GLOBAL_MODE] == Mode.SILENT.name) {
                     prefs[Keys.GLOBAL_MODE] = Mode.BUSY.name
                 }
                 prefs[Keys.GLOBAL_REJECT_DEFAULT_MIGRATED] = true
