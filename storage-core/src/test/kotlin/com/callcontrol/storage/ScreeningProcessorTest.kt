@@ -60,14 +60,15 @@ class ScreeningProcessorTest {
     @Test
     fun numberRuleSilentSilences() = runBlocking<Unit> {
         val f = Fixture()
+        f.repository().updateSettings { it.copy(globalMode = Mode.AVAILABLE) }.getOrThrow()
         f.repository().addNumberRule(friend, Mode.SILENT).getOrThrow()
         assertEquals(CallAction.SILENCE, processor(f).decide(call(friend)).decision.action)
     }
 
     @Test
-    fun noRulesAndDefaultSettingsAllowTheCall() = runBlocking<Unit> {
+    fun noRulesAndDefaultSettingsRejectTheCall() = runBlocking<Unit> {
         val r = processor(Fixture()).decide(call("+201112345678"))
-        assertEquals(CallAction.ALLOW, r.decision.action)
+        assertEquals(CallAction.REJECT, r.decision.action)
         assertEquals(DecisionReason.GLOBAL_MODE, r.decision.reason)
     }
 
@@ -93,7 +94,7 @@ class ScreeningProcessorTest {
     @Test
     fun unregisteredRuleAppliesOnlyWhenTheNumberIsNotInContacts() = runBlocking<Unit> {
         val f = Fixture()
-        f.repository().updateSettings { it.copy(unregistered = LevelRule(true, Mode.BUSY)) }.getOrThrow()
+        f.repository().updateSettings { it.copy(globalMode = Mode.AVAILABLE, unregistered = LevelRule(true, Mode.BUSY)) }.getOrThrow()
 
         val stranger = processor(f, ContactLookup { ContactStatus.NOT_IN_CONTACTS }).decide(call("+201112345678"))
         val contact = processor(f, ContactLookup { ContactStatus.IN_CONTACTS }).decide(call("+201112345678"))
@@ -107,7 +108,7 @@ class ScreeningProcessorTest {
     fun hiddenCallUsesTheHiddenRuleNeverTheUnregisteredOne() = runBlocking<Unit> {
         val f = Fixture()
         f.repository().updateSettings {
-            it.copy(unregistered = LevelRule(true, Mode.BUSY), hidden = LevelRule(true, Mode.SILENT))
+            it.copy(globalMode = Mode.AVAILABLE, unregistered = LevelRule(true, Mode.BUSY), hidden = LevelRule(true, Mode.SILENT))
         }.getOrThrow()
         var lookups = 0
         val p = processor(f, ContactLookup { lookups++; ContactStatus.NOT_IN_CONTACTS })
@@ -133,7 +134,7 @@ class ScreeningProcessorTest {
     @Test
     fun blankNumberCountsAsHidden() = runBlocking<Unit> {
         val f = Fixture()
-        f.repository().updateSettings { it.copy(hidden = LevelRule(true, Mode.BUSY)) }.getOrThrow()
+        f.repository().updateSettings { it.copy(globalMode = Mode.AVAILABLE, hidden = LevelRule(true, Mode.BUSY)) }.getOrThrow()
         assertEquals(DecisionReason.HIDDEN_RULE, processor(f).decide(call("")).decision.reason)
         assertEquals(DecisionReason.HIDDEN_RULE, processor(f).decide(call("   ")).decision.reason)
     }
@@ -143,7 +144,7 @@ class ScreeningProcessorTest {
     @Test
     fun contactsPermissionDeniedDoesNotTriggerTheUnregisteredRule() = runBlocking<Unit> {
         val f = Fixture()
-        f.repository().updateSettings { it.copy(unregistered = LevelRule(true, Mode.BUSY)) }.getOrThrow()
+        f.repository().updateSettings { it.copy(globalMode = Mode.AVAILABLE, unregistered = LevelRule(true, Mode.BUSY)) }.getOrThrow()
         val r = processor(f, ContactLookup { throw SecurityException("READ_CONTACTS denied") }).decide(call("+201112345678"))
         assertEquals(ContactStatus.UNKNOWN, r.contactStatus)
         assertEquals(CallAction.ALLOW, r.decision.action)
@@ -152,7 +153,7 @@ class ScreeningProcessorTest {
     @Test
     fun slowContactsLookupTimesOutAsUnknown() = runBlocking<Unit> {
         val f = Fixture()
-        f.repository().updateSettings { it.copy(unregistered = LevelRule(true, Mode.BUSY)) }.getOrThrow()
+        f.repository().updateSettings { it.copy(globalMode = Mode.AVAILABLE, unregistered = LevelRule(true, Mode.BUSY)) }.getOrThrow()
         val slow = ContactLookup { delay(5_000); ContactStatus.NOT_IN_CONTACTS }
         val started = System.currentTimeMillis()
 
@@ -235,6 +236,7 @@ class ScreeningProcessorTest {
     @Test
     fun twoConsecutiveCallsAreDecidedIndependently() = runBlocking<Unit> {
         val f = Fixture()
+        f.repository().updateSettings { it.copy(globalMode = Mode.AVAILABLE) }.getOrThrow()
         f.repository().addNumberRule("01012345678", Mode.BUSY).getOrThrow()
         f.repository().addNumberRule("01112345678", Mode.SILENT).getOrThrow()
         val p = processor(f)
@@ -251,6 +253,7 @@ class ScreeningProcessorTest {
     @Test
     fun concurrentCallsDoNotInterfere() = runBlocking<Unit> {
         val f = Fixture()
+        f.repository().updateSettings { it.copy(globalMode = Mode.AVAILABLE) }.getOrThrow()
         f.repository().addNumberRule("01012345678", Mode.BUSY).getOrThrow()
         val p = processor(f)
         val results = (1..20).map { i ->
@@ -268,6 +271,7 @@ class ScreeningProcessorTest {
     fun aRuleChangeBetweenTwoCallsAppliesToTheSecondCall() = runBlocking<Unit> {
         val f = Fixture()
         val repo = f.repository()
+        repo.updateSettings { it.copy(globalMode = Mode.AVAILABLE) }.getOrThrow()
         val p = processor(f)
         assertEquals(CallAction.ALLOW, p.decide(call(friend)).decision.action)
 

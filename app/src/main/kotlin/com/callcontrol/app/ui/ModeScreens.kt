@@ -43,7 +43,7 @@ fun GlobalModeScreen(vm: MainViewModel) {
     val settings = currentSettings(vm)
     ScreenScaffold(title = "الوضع العام", onBack = { vm.back() }) { padding ->
         ModeScreenBody(padding) {
-            Notice("الوضع العام هو الحالة الافتراضية لكل مكالمة لا تنطبق عليها قاعدة رقم محدد أو قاعدة غير المسجل أو المخفي.")
+            Notice("عند اختيار «مشغول» أو «غير متاح»، تُرفض كل المكالمات الواردة. الاستثناء الوحيد هو رقم أضفته بنفسك إلى قائمة الاستثناءات واخترت السماح له.")
             AppCard {
                 SwitchRow(
                     title = "تشغيل التحكم",
@@ -54,7 +54,7 @@ fun GlobalModeScreen(vm: MainViewModel) {
                 )
             }
             if (settings.scheduleEnabled) {
-                Notice("الجدولة مفعّلة: الوضع الفعلي يتغير حسب الجدول. الوضع المختار هنا يُستخدم خارج فترات الجدول فقط إن لم تحدد وضعًا لباقي اليوم.")
+                Notice(if (settings.globalMode.action == com.callcontrol.domain.CallAction.REJECT) "الجدولة لن تسمح بمرور المكالمات أثناء تفعيل الرفض العام." else "الجدولة مفعّلة: الوضع الفعلي قد يتغير حسب الجدول.")
             }
             ModeSelector(
                 selected = settings.globalMode,

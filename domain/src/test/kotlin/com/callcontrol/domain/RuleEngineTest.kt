@@ -39,6 +39,19 @@ class RuleEngineTest {
 
     private fun decide(c: CallContext, cfg: RuleConfig, at: LocalDateTime = now) = RuleEngine.decide(c, cfg, at)
 
+    @Test
+    fun freshInstallDefaultsToRejectingEveryCallerExceptExplicitNumberExceptions() {
+        val cfg = RuleConfig.DEFAULT
+        assertEquals(Mode.BUSY, cfg.globalMode)
+        assertEquals(CallAction.REJECT, decide(call(friend), cfg).action)
+        assertEquals(CallAction.REJECT, decide(call(stranger, ContactStatus.UNKNOWN), cfg).action)
+        assertEquals(CallAction.REJECT, decide(call(number = null, contact = ContactStatus.UNKNOWN, hidden = true), cfg).action)
+
+        val withException = cfg.copy(numberRules = mapOf(friend to SpecialRule(friend, Mode.AVAILABLE)))
+        assertEquals(CallAction.ALLOW, decide(call(friend), withException).action)
+        assertEquals(CallAction.REJECT, decide(call(stranger), withException).action)
+    }
+
     // ---- mode -> action mapping ----
 
     @Test
@@ -61,10 +74,37 @@ class RuleEngineTest {
     }
 
     @Test
+    fun rejectingGlobalModeBlocksUnregisteredHiddenAndScheduledAllowModes() {
+        val cfg = config(
+            global = Mode.BUSY,
+            unregistered = LevelRule(true, Mode.AVAILABLE),
+            hidden = LevelRule(true, Mode.AVAILABLE),
+            schedule = Schedule(
+                enabled = true,
+                entries = listOf(ScheduleEntry(DayOfWeek.values().toSet(), LocalTime.of(8, 0), LocalTime.of(14, 0), Mode.AVAILABLE)),
+                defaultMode = Mode.AVAILABLE,
+            ),
+        )
+        assertEquals(CallAction.REJECT, decide(call(stranger, ContactStatus.NOT_IN_CONTACTS), cfg).action)
+        assertEquals(CallAction.REJECT, decide(call(number = null, contact = ContactStatus.UNKNOWN, hidden = true), cfg).action)
+        assertEquals(CallAction.ALLOW, decide(call(friend), cfg.copy(
+            numberRules = mapOf(friend to SpecialRule(friend, Mode.AVAILABLE)),
+        )).action)
+    }
+
+    @Test
     fun numberRuleBusyBeatsAvailableGlobal() {
         val d = decide(call(), config(global = Mode.AVAILABLE, rules = listOf(SpecialRule(friend, Mode.BUSY))))
         assertEquals(CallAction.REJECT, d.action)
         assertEquals(DecisionReason.NUMBER_RULE, d.reason)
+    }
+
+    @Test
+    fun silentPerNumberRuleCannotBypassRejectingGlobalMode() {
+        val cfg = config(global = Mode.BUSY, rules = listOf(SpecialRule(friend, Mode.SILENT)))
+        val d = decide(call(), cfg)
+        assertEquals(CallAction.REJECT, d.action)
+        assertEquals(DecisionReason.GLOBAL_MODE, d.reason)
     }
 
     @Test
@@ -194,11 +234,11 @@ class RuleEngineTest {
     }
 
     @Test
-    fun unregisteredRuleBeatsGlobalMode() {
+    fun rejectingGlobalModeBeatsUnregisteredRule() {
         val cfg = config(global = Mode.BUSY, unregistered = LevelRule(true, Mode.AVAILABLE))
         val d = decide(call(stranger, ContactStatus.NOT_IN_CONTACTS), cfg)
-        assertEquals(Mode.AVAILABLE, d.mode)
-        assertEquals(DecisionReason.UNREGISTERED_RULE, d.reason)
+        assertEquals(Mode.BUSY, d.mode)
+        assertEquals(DecisionReason.GLOBAL_MODE, d.reason)
     }
 
     @Test

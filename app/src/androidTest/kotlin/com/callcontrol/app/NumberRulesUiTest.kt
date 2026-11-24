@@ -83,6 +83,7 @@ class NumberRulesUiTest {
 
     @Test
     fun hiddenAndUnregisteredSwitchesAreIndependent() {
+        rule.onNodeWithTag("btn_settings").performClick()
         rule.onNodeWithTag("nav_hidden").performScrollTo().performClick()
         rule.waitUntil(5_000) { rule.onAllNodes(hasTestTag("switch_hidden")).fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithTag("switch_hidden").performClick()

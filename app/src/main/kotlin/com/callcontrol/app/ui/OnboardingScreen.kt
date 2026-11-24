@@ -41,7 +41,7 @@ fun OnboardingScreen(vm: MainViewModel) {
         Icon(Icons.Filled.Call, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(64.dp))
         Text("التحكم في المكالمات", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text(
-            "حدّد من يستطيع الوصول إليك: اسمح بالمكالمة، أو ارفضها، أو اكتم رنينها، حسب قواعد تضعها أنت.",
+            "الوضع الافتراضي يرفض المكالمات الواردة، ويمكنك إضافة أرقام محددة إلى الاستثناءات للسماح لها بالاتصال.",
             style = MaterialTheme.typography.bodyLarge,
         )
         AppCard {

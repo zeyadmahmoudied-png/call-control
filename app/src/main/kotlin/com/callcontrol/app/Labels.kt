@@ -70,7 +70,7 @@ fun formatTime(t: LocalTime): String = "%02d:%02d".format(t.hour, t.minute)
  * Keeps a number readable inside right-to-left text: without the isolate marks a "+20..." number can be
  * displayed as "...20+".
  */
-fun ltr(text: String): String = "⁦$text⁩"
+fun ltr(text: String): String = "\u2066$text\u2069"
 
 /** Egyptian numbers are shown in the familiar local form (01012345678); everything else as stored. */
 fun displayNumber(key: String?): String = when {

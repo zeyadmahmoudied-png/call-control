@@ -180,7 +180,7 @@ class ScheduleStorageTest {
         val repo = f.repository()
         repo.addScheduleEntry(ScheduleEntry(allDays, t(8), t(14), Mode.BUSY)).getOrThrow()
         repo.addScheduleEntry(ScheduleEntry(allDays, t(14), t(22), Mode.AVAILABLE)).getOrThrow()
-        repo.updateSettings { it.copy(scheduleEnabled = true, scheduleDefaultMode = Mode.SILENT) }.getOrThrow()
+        repo.updateSettings { it.copy(globalMode = Mode.AVAILABLE, scheduleEnabled = true, scheduleDefaultMode = Mode.SILENT) }.getOrThrow()
 
         val config = f.repository().loadRuleConfig().getOrThrow() // "restart": a brand-new repository
         val call = CallContext("+201112345678", isHidden = false, contactStatus = ContactStatus.IN_CONTACTS)

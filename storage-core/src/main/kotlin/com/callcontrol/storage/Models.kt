@@ -36,11 +36,11 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 /**
  * All simple settings (kept in Preferences DataStore on Android, never in Room).
- * Defaults describe a fresh install: control on, everything available, no special levels, no schedule.
+ * Defaults describe a fresh install: control on, reject all incoming calls, no broad overrides, and no schedule.
  */
 data class AppSettings(
     val controlEnabled: Boolean = true,
-    val globalMode: Mode = Mode.AVAILABLE,
+    val globalMode: Mode = Mode.BUSY,
     val unregistered: LevelRule = LevelRule(enabled = false, mode = Mode.AVAILABLE),
     val hidden: LevelRule = LevelRule(enabled = false, mode = Mode.AVAILABLE),
     val scheduleEnabled: Boolean = false,

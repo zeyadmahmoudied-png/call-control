@@ -1,13 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <!--
-        The ONLY runtime permission. It is optional: used to tell whether an incoming number is saved in
-        the user's contacts (the "unregistered numbers" rule). Without it that rule simply never applies,
-        and calls are never blocked because of the missing permission.
-        No INTERNET, no READ_CALL_LOG, no ANSWER_PHONE_CALLS: nothing leaves the device.
-    -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <queries>
         <intent>
@@ -35,8 +29,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Declared as a call screening service: Android only binds it when the user made this app the
-             "Caller ID & spam" app (ROLE_CALL_SCREENING). -->
         <service
             android:name=".service.CallControlScreeningService"
             android:exported="true"

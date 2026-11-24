@@ -52,10 +52,10 @@ data class RuleConfig(
     val numberRules: Map<String, SpecialRule> = emptyMap(),
 ) {
     companion object {
-        /** Fresh install: control on, everything available, no special levels active. */
+        /** Fresh install: control on, reject calls by default; per-number exceptions may allow selected callers. */
         val DEFAULT = RuleConfig(
             controlEnabled = true,
-            globalMode = Mode.AVAILABLE,
+            globalMode = Mode.BUSY,
             unregistered = LevelRule(enabled = false, mode = Mode.AVAILABLE),
             hidden = LevelRule(enabled = false, mode = Mode.AVAILABLE),
         )
@@ -87,9 +87,9 @@ data class Decision(
  * Pure, stateless decision logic. No Android, no database, no clock of its own.
  *
  * Priority (first match wins):
- *  1. Per-number rule (enabled)
- *  2. Unregistered-number rule (enabled; only for calls WITH a number that is NOT in contacts)
- *  3. Hidden-number rule (enabled; only for calls without a number)
+ *  1. Per-number rule (enabled; under a rejecting global mode, only ALLOW or REJECT is honored, never SILENT)
+ *  2. A rejecting global mode, which blocks all other callers regardless of contact status or schedule
+ *  3. Unregistered-number rule and hidden-number rule (when the global mode is not rejecting)
  *  4. Global mode (possibly replaced by the schedule)
  *
  * Unregistered and hidden are never mixed: a hidden call is not "unregistered", and a call whose
@@ -110,8 +110,18 @@ object RuleEngine {
         if (!hidden && key != null) {
             val rule = config.numberRules[key]
             if (rule != null && rule.enabled) {
-                return Decision(rule.mode, DecisionReason.NUMBER_RULE, matchedNumber = key)
+                // Under a global reject, only an explicit ALLOW rule is an exception.
+                // A per-number SILENT rule must not let a caller through the master block.
+                if (config.globalMode.action != CallAction.REJECT || rule.mode.action != CallAction.SILENCE) {
+                    return Decision(rule.mode, DecisionReason.NUMBER_RULE, matchedNumber = key)
+                }
             }
+        }
+
+        // A rejecting global mode is the master block: only an explicit per-number rule above
+        // may create an exception. Broad categories and schedules cannot accidentally let calls through.
+        if (config.globalMode.action == CallAction.REJECT) {
+            return Decision(config.globalMode, DecisionReason.GLOBAL_MODE)
         }
 
         // 2. unregistered numbers (a number is present, lookup succeeded, and it is not a contact)

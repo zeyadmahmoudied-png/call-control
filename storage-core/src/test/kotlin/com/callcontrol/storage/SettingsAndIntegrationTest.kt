@@ -36,7 +36,7 @@ class SettingsAndIntegrationTest {
         val s = Fixture().repository().loadSettings().getOrThrow()
         assertEquals(AppSettings(), s)
         assertTrue(s.controlEnabled)
-        assertEquals(Mode.AVAILABLE, s.globalMode)
+        assertEquals(Mode.BUSY, s.globalMode)
         assertFalse(s.unregistered.enabled)
         assertFalse(s.hidden.enabled)
         assertFalse(s.scheduleEnabled)
@@ -89,7 +89,7 @@ class SettingsAndIntegrationTest {
     @Test
     fun observeSettingsReflectsChanges() = runBlocking<Unit> {
         val repo = Fixture().repository()
-        assertEquals(Mode.AVAILABLE, repo.observeSettings().first().getOrThrow().globalMode)
+        assertEquals(Mode.BUSY, repo.observeSettings().first().getOrThrow().globalMode)
         repo.updateSettings { it.copy(globalMode = Mode.SILENT) }.getOrThrow()
         assertEquals(Mode.SILENT, repo.observeSettings().first().getOrThrow().globalMode)
     }
