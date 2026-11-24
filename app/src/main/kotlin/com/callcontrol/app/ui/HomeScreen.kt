@@ -147,7 +147,7 @@ fun HomeScreen(vm: MainViewModel) {
             }
 
             if (settings.scheduleEnabled) {
-                Notice("الجدولة مفعّلة وقد تغيّر الوضع العام في أوقات محددة. راجع إعدادات الجدولة قبل الاعتماد على الحظر طوال الوقت.")
+                Notice(if (settings.globalMode.action == com.callcontrol.domain.CallAction.REJECT) "الجدولة مفعّلة، لكنها لا تتجاوز الرفض العام." else "الجدولة مفعّلة وقد تغيّر الوضع العام في أوقات محددة.")
             }
 
             AppCard(
