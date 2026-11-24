@@ -116,25 +116,33 @@ fun HomeScreen(vm: MainViewModel) {
             }
 
             // Exceptions are deliberately the only secondary management card on the home screen.
-            AppCard(
-                onClick = { vm.navigate(Screen.Numbers) },
-                modifier = Modifier.testTag("nav_exceptions"),
-            ) {
+            AppCard {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.Filled.Contacts, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                        Text("الاستثناءات", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        Text(
-                            if (enabledExceptions == 0) "أضف الأرقام المسموح لها بالوصول إليك"
-                            else "$enabledExceptions رقمًا له إعداد خاص",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                    Row(
+                        modifier = Modifier.weight(1f).clickable { vm.navigate(Screen.Numbers) }.testTag("nav_numbers"),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Filled.Contacts, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                            Text("الاستثناءات", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                if (enabledExceptions == 0) "أضف الأرقام المسموح لها بالوصول إليك"
+                                else "${enabledExceptions} رقمًا له إعداد خاص",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
                     }
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
+                    IconButton(
+                        onClick = { vm.navigate(Screen.EditNumber(null)) },
+                        modifier = Modifier.testTag("btn_add_number"),
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = "إضافة استثناء", tint = MaterialTheme.colorScheme.primary)
+                    }
                 }
             }
 
