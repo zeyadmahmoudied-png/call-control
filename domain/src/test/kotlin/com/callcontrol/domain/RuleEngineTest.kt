@@ -39,6 +39,19 @@ class RuleEngineTest {
 
     private fun decide(c: CallContext, cfg: RuleConfig, at: LocalDateTime = now) = RuleEngine.decide(c, cfg, at)
 
+    @Test
+    fun freshInstallDefaultsToRejectingEveryCallerExceptExplicitNumberExceptions() {
+        val cfg = RuleConfig.DEFAULT
+        assertEquals(Mode.BUSY, cfg.globalMode)
+        assertEquals(CallAction.REJECT, decide(call(friend), cfg).action)
+        assertEquals(CallAction.REJECT, decide(call(stranger, ContactStatus.UNKNOWN), cfg).action)
+        assertEquals(CallAction.REJECT, decide(call(number = null, contact = ContactStatus.UNKNOWN, hidden = true), cfg).action)
+
+        val withException = cfg.copy(numberRules = mapOf(friend to SpecialRule(friend, Mode.AVAILABLE)))
+        assertEquals(CallAction.ALLOW, decide(call(friend), withException).action)
+        assertEquals(CallAction.REJECT, decide(call(stranger), withException).action)
+    }
+
     // ---- mode -> action mapping ----
 
     @Test
