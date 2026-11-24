@@ -95,6 +95,19 @@ class DataStoreSettingsStoreTest {
     }
 
     @Test
+    fun oldAllowAllDefaultMigratesToRejectingGlobalModeOnce() = runBlocking<Unit> {
+        val dataStore = openDataStore()
+        dataStore.edit { it[DataStoreSettingsStore.Keys.GLOBAL_MODE] = Mode.AVAILABLE.name }
+        val store = DataStoreSettingsStore(dataStore)
+
+        assertEquals(Mode.BUSY, store.read().globalMode)
+
+        // Once migrated, a deliberate user choice is preserved on later reads.
+        store.update { it.copy(globalMode = Mode.AVAILABLE) }
+        assertEquals(Mode.AVAILABLE, store.read().globalMode)
+    }
+
+    @Test
     fun anUnknownStoredValueFallsBackToThatFieldsDefaultOnly() = runBlocking<Unit> {
         val dataStore = openDataStore()
         val store = DataStoreSettingsStore(dataStore)
@@ -103,7 +116,7 @@ class DataStoreSettingsStoreTest {
 
         val read = store.read()
 
-        assertEquals(Mode.AVAILABLE, read.globalMode) // bad value -> default
+        assertEquals(Mode.BUSY, read.globalMode) // bad value -> new default
         assertEquals(ThemeMode.DARK, read.themeMode)   // other fields untouched
     }
 }
