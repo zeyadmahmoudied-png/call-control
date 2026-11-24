@@ -91,6 +91,21 @@ fun SettingsScreen(vm: MainViewModel) {
             OutlinedButton(onClick = { vm.navigate(Screen.Diagnostics) }, modifier = Modifier.fillMaxWidth().testTag("btn_open_diagnostics")) {
                 Text("حالة التطبيق والأذونات")
             }
+            SectionTitle("قواعد إضافية")
+            Text(
+                "تُستخدم هذه القواعد عندما يكون الوضع العام «متاح» أو «صامت». وضع الرفض العام يتجاوزها حتى لا تمر مكالمة دون استثناء رقم محدد.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedButton(onClick = { vm.navigate(Screen.Unregistered) }, modifier = Modifier.fillMaxWidth().testTag("nav_unregistered")) {
+                Text("الأرقام غير المسجلة")
+            }
+            OutlinedButton(onClick = { vm.navigate(Screen.Hidden) }, modifier = Modifier.fillMaxWidth().testTag("nav_hidden")) {
+                Text("الأرقام المخفية")
+            }
+            OutlinedButton(onClick = { vm.navigate(Screen.Schedule) }, modifier = Modifier.fillMaxWidth().testTag("nav_schedule")) {
+                Text("الجدولة")
+            }
             SectionTitle("عن التطبيق")
             Text("الإصدار: ${versionText(context)}", modifier = Modifier.testTag("text_version"))
             Text(
