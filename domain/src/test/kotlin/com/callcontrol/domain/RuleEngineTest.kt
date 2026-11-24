@@ -234,11 +234,11 @@ class RuleEngineTest {
     }
 
     @Test
-    fun unregisteredRuleBeatsGlobalMode() {
+    fun rejectingGlobalModeBeatsUnregisteredRule() {
         val cfg = config(global = Mode.BUSY, unregistered = LevelRule(true, Mode.AVAILABLE))
         val d = decide(call(stranger, ContactStatus.NOT_IN_CONTACTS), cfg)
-        assertEquals(Mode.AVAILABLE, d.mode)
-        assertEquals(DecisionReason.UNREGISTERED_RULE, d.reason)
+        assertEquals(Mode.BUSY, d.mode)
+        assertEquals(DecisionReason.GLOBAL_MODE, d.reason)
     }
 
     @Test
