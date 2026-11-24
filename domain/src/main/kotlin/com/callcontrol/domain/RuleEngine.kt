@@ -87,7 +87,7 @@ data class Decision(
  * Pure, stateless decision logic. No Android, no database, no clock of its own.
  *
  * Priority (first match wins):
- *  1. Per-number rule (enabled; this is the only exception to a rejecting global mode)
+ *  1. Per-number rule (enabled; under a rejecting global mode, only ALLOW or REJECT is honored, never SILENT)
  *  2. A rejecting global mode, which blocks all other callers regardless of contact status or schedule
  *  3. Unregistered-number rule and hidden-number rule (when the global mode is not rejecting)
  *  4. Global mode (possibly replaced by the schedule)
@@ -112,7 +112,7 @@ object RuleEngine {
             if (rule != null && rule.enabled) {
                 // Under a global reject, only an explicit ALLOW rule is an exception.
                 // A per-number SILENT rule must not let a caller through the master block.
-                if (config.globalMode.action != CallAction.REJECT || rule.mode.action == CallAction.ALLOW) {
+                if (config.globalMode.action != CallAction.REJECT || rule.mode.action != CallAction.SILENCE) {
                     return Decision(rule.mode, DecisionReason.NUMBER_RULE, matchedNumber = key)
                 }
             }
