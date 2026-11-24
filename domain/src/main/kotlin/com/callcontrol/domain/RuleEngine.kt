@@ -110,7 +110,11 @@ object RuleEngine {
         if (!hidden && key != null) {
             val rule = config.numberRules[key]
             if (rule != null && rule.enabled) {
-                return Decision(rule.mode, DecisionReason.NUMBER_RULE, matchedNumber = key)
+                // Under a global reject, only an explicit ALLOW rule is an exception.
+                // A per-number SILENT rule must not let a caller through the master block.
+                if (config.globalMode.action != CallAction.REJECT || rule.mode.action == CallAction.ALLOW) {
+                    return Decision(rule.mode, DecisionReason.NUMBER_RULE, matchedNumber = key)
+                }
             }
         }
 
